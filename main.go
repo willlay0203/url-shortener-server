@@ -1,18 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
-
-	"github.com/julienschmidt/httprouter"
+	"server/api"
 )
 
-const PORT = "8080"
-
 func main() {
-	router := httprouter.New()
+	const PORT string = ":3000"
 
-	fmt.Printf("Server listening on %v", PORT)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	server := api.Server{Port: PORT}
+
+	log.Fatal(server.Start())
 }

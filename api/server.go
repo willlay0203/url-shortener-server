@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,7 +32,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func shortenUrl(w http.ResponseWriter, r *http.Request) {
-
+	var err error
 	// Reads body into a byte array
 	body, err := io.ReadAll(r.Body)
 
@@ -55,4 +57,14 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 
 	// Process the url passed in
 
+	// Randomise
+	b := make([]byte, 8)
+	_, err = rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+
+	shortenedUrl := base64.StdEncoding.EncodeToString(b)
+
+	log.Printf("Url shortened to %v", shortenedUrl)
 }

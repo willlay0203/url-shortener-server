@@ -1,13 +1,12 @@
 package api
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"server/lib"
 	"server/types"
 )
 
@@ -23,7 +22,7 @@ func (s *Server) Start() error {
 	// Endpoint to shorten url
 	router.HandleFunc("POST /url", shortenUrl)
 
-	fmt.Printf("Server listening on %v", s.Port)
+	fmt.Printf("Server listening on %v\n", s.Port)
 	return http.ListenAndServe(s.Port, router)
 }
 
@@ -53,18 +52,26 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log and return input
-	log.Printf("received: %v", string(body))
+	log.Printf("%v", string(body))
 
 	// Process the url passed in
-
 	// Randomise
-	b := make([]byte, 8)
-	_, err = rand.Read(b)
+	code := lib.RandomString()
+
+	// Send request to POST to db
+	err = postNewShortenedUrl(code, url.Uri)
+
 	if err != nil {
-		panic(err)
+		log.Printf("Error posting to DB")
+		http.Error(w, "Error mapping request body", http.StatusInternalServerError)
 	}
 
-	shortenedUrl := base64.StdEncoding.EncodeToString(b)
+	// DB has been posted return value to user
+	type Payload struct {
+		NewLink string
+	}
 
-	log.Printf("Url shortened to %v", shortenedUrl)
+	// Send back json payload
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&Payload{r.Host + "/" + code})
 }

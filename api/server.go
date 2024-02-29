@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"server/lib"
 	"server/types"
+
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -24,7 +26,10 @@ func (s *Server) Start() error {
 	// Endpoint to hit shorten url
 	router.HandleFunc("GET /url/{shortLink}", redirectLink)
 	fmt.Printf("Server listening on %v\n", s.Port)
-	return http.ListenAndServe(s.Port, router)
+
+	// CORS middleware
+	handler := cors.Default().Handler(router)
+	return http.ListenAndServe(s.Port, handler)
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {

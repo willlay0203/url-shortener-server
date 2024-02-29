@@ -1,29 +1,17 @@
 package api
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
-	"os"
+	"server/lib"
+	"server/types"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 func postNewShortenedUrl(code string, link string) error {
 
-	// Load connection string from .env file, opens the env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("failed to load env", err)
-
-	}
-
-	// Open a connection to PlanetScale
-	db, err := sql.Open("mysql", os.Getenv("DSN"))
-	if err != nil {
-		log.Fatalf("failed to connect: %v", err)
-	}
+	db := lib.OpenDb()
 
 	// SQL query
 	res, err := db.Exec("INSERT INTO Urls(code, link) VALUES (?, ?)", code, link)
@@ -48,4 +36,25 @@ func postNewShortenedUrl(code string, link string) error {
 	fmt.Printf("\ncode: %v, link: %v", code, link)
 
 	return nil
+}
+
+func getUrl(code string) (string, error) {
+	db := lib.OpenDb()
+
+	// SQL query
+	url := types.ShortenedUrl{}
+	err := db.QueryRow("SELECT * FROM Urls WHERE code = ?", code).Scan(&url.Code, &url.Link)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if url.Code == "" || url.Link == "" {
+		log.Fatal("URL not valid")
+	}
+
+	// Close the sql
+	defer db.Close()
+
+	return url.Link, nil
 }

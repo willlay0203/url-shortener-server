@@ -21,7 +21,8 @@ func (s *Server) Start() error {
 	router.HandleFunc("GET /healthcheck", healthCheck)
 	// Endpoint to shorten url
 	router.HandleFunc("POST /url", shortenUrl)
-
+	// Endpoint to hit shorten url
+	router.HandleFunc("GET /url/{shortLink}", redirectLink)
 	fmt.Printf("Server listening on %v\n", s.Port)
 	return http.ListenAndServe(s.Port, router)
 }
@@ -73,5 +74,19 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 
 	// Send back json payload
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&Payload{r.Host + "/" + code})
+	json.NewEncoder(w).Encode(&Payload{r.Host + "/url/" + code})
+}
+
+func redirectLink(w http.ResponseWriter, r *http.Request) {
+	code := r.PathValue("shortLink")
+
+	link, err := getUrl(code)
+
+	log.Println(link)
+
+	if err != nil {
+		http.Error(w, "Link not matched", http.StatusNotFound)
+	}
+
+	http.Redirect(w, r, link, http.StatusMultipleChoices)
 }

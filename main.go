@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	const PORT string = ":3000"
+	const PORT string = ":8080"
 
 	server := api.Server{Port: PORT}
 

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"log"
 	"os"
+	"strings"
 
 	"database/sql"
 
@@ -18,7 +19,9 @@ func RandomString() string {
 	if err != nil {
 		panic(err)
 	}
-	return base64.StdEncoding.EncodeToString(b)
+
+	// Replace / with A
+	return strings.ReplaceAll(base64.StdEncoding.EncodeToString(b), "/", "A")
 }
 
 func OpenDb() *sql.DB {

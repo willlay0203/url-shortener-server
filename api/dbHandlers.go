@@ -21,15 +21,12 @@ func postNewShortenedUrl(code string, link string) error {
 	}
 
 	// Check if it has worked
-	added, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	if added != 1 {
-		log.Fatalf("expected new row to be added, affected %d", added)
-	}
 	// Close the sql
 	defer db.Close()
 
@@ -46,11 +43,11 @@ func getUrl(code string) (string, error) {
 	err := db.QueryRow("SELECT * FROM Urls WHERE code = ?", code).Scan(&url.Code, &url.Link)
 
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	if url.Code == "" || url.Link == "" {
-		log.Fatal("URL not valid")
+		return "Code and link is missing", err
 	}
 
 	// Close the sql

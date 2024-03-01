@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	api "server/api/errors"
 	"server/lib"
 	"server/types"
 
@@ -42,20 +43,14 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 
 	// Checks for error
-	if err != nil {
-		log.Printf("Error reading request body: %v", err)
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
-	}
+	api.HttpErrorHandler(w, "Error reading request body", http.StatusInternalServerError, err)
 
 	var url types.Url
 
 	// Treat this like an object mapper
 	err = json.Unmarshal(body, &url)
 
-	if err != nil {
-		log.Printf("Error mapping request body: %v", err)
-		http.Error(w, "Error mapping request body", http.StatusBadRequest)
-	}
+	api.HttpErrorHandler(w, "Error mapping request body", http.StatusBadRequest, err)
 
 	// Log and return input
 	log.Printf("%v", string(body))
@@ -67,10 +62,7 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 	// Send request to POST to db
 	err = postNewShortenedUrl(code, url.Uri)
 
-	if err != nil {
-		log.Printf("Error posting to DB")
-		http.Error(w, "Error mapping request body", http.StatusInternalServerError)
-	}
+	api.HttpErrorHandler(w, "Error posting to DB", http.StatusInternalServerError, err)
 
 	// DB has been posted return value to user
 	type Payload struct {
@@ -89,9 +81,7 @@ func redirectLink(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(link)
 
-	if err != nil {
-		http.Error(w, "Link not matched", http.StatusNotFound)
-	}
+	api.HttpErrorHandler(w, "Link not found", http.StatusNotFound, err)
 
 	http.Redirect(w, r, link, http.StatusMultipleChoices)
 }
